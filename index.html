@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E141F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>UniFi Pro — 2026 path</title>
+<style>
+:root{
+  --bg:#0E141F; --panel:#161F30; --panel2:#1C2740; --line:#2A3752; --line2:#364567;
+  --txt:#EAF0FA; --mut:#8D9AB3; --dim:#5C6A86;
+  --green:#2ED47F; --amber:#F0B429; --blue:#4DA3FF; --red:#FF6B8A; --violet:#B388FF;
+  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{color:var(--txt);font-family:var(--sans);font-size:15px;line-height:1.45;overflow-x:hidden;
+  padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+.app{max-width:560px;margin:0 auto;min-height:100vh}
+.view{display:none;padding:14px 16px 8px}
+.view.on{display:block}
+h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+h2{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
+a{color:var(--blue);text-decoration:none}
+button{font-family:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.mut{color:var(--mut)} .small{font-size:12.5px}
+.topbar{display:flex;align-items:baseline;justify-content:space-between;padding:8px 2px 14px}
+.streak{font-weight:700;color:var(--amber);font-size:14px}
+
+/* --- the faceplate (hero) --- */
+.plate{background:linear-gradient(180deg,#1A2438,#131B2B);border:1px solid var(--line);border-radius:14px;padding:14px 14px 12px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 14px 30px -18px rgba(0,0,0,.8)}
+.plate .head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:10px}
+.plate .lvl{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.plate .lvlsub{color:var(--mut);font-size:13px;margin-top:4px}
+.plate .pct{font-size:36px;font-weight:800;letter-spacing:-.04em;line-height:1;text-align:right}
+.plate .pct small{font-size:14px;font-weight:600;color:var(--mut);margin-left:2px}
+.xp{height:8px;background:#0B1220;border-radius:99px;overflow:hidden;border:1px solid #0A101B}
+.xp i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:99px;transition:width .5s ease}
+.xpmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin:6px 0 12px}
+.board{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:5px;padding:8px;background:#0A101B;border-radius:8px;border:1px solid #060B14}
+.port{aspect-ratio:1/1.15;min-width:0;min-height:0;border-radius:3px;background:#1A2436;border:1px solid #101827;position:relative;cursor:pointer;transition:background .2s}
+.port::after{content:"";position:absolute;left:22%;right:22%;top:14%;height:2px;border-radius:1px;background:#0B1220}
+.port.on{background:#173C2B;border-color:#1F5A3C}
+.port.on::after{background:var(--green);box-shadow:0 0 6px var(--green)}
+.port.next{background:#3A2E12;border-color:#5C4A1C}
+.port.next::after{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.port.next::after{animation:none}}
+.boardlbl{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:8px}
+
+/* --- do-this card --- */
+.dothis{margin-top:16px;border:1px solid var(--line2);border-radius:14px;padding:14px;background:var(--panel)}
+.dothis .k{display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:12.5px;color:var(--mut)}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;border:1px solid var(--line2);color:var(--txt)}
+.tag.lab{border-color:rgba(77,163,255,.5);color:var(--blue)}
+.tag.adv{border-color:rgba(179,136,255,.5);color:var(--violet)}
+.tag.new{border-color:rgba(240,180,41,.55);color:var(--amber)}
+.dothis .t{font-size:17px;font-weight:700;line-height:1.35;letter-spacing:-.01em}
+.dothis .w{margin-top:8px;color:var(--mut);font-size:14px}
+.dothis .w b{color:var(--green);font-weight:700}
+.actions{display:flex;gap:8px;margin-top:14px}
+.btn{flex:1;border:0;border-radius:10px;padding:13px 14px;font-weight:700;font-size:15px;background:var(--panel2);color:var(--txt)}
+.btn.go{background:var(--green);color:#062A17;box-shadow:0 8px 20px -10px var(--green)}
+.btn.ghost{flex:0 0 auto;background:transparent;border:1px solid var(--line2);color:var(--mut)}
+
+/* --- path meters --- */
+.section{display:flex;justify-content:space-between;align-items:baseline;margin:20px 2px 8px}
+.meter{display:grid;grid-template-columns:10px 1fr auto;gap:12px;align-items:center;padding:11px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer}
+.meter.lead{border-color:rgba(240,180,41,.55)}
+.meter .sw{width:10px;height:26px;border-radius:3px}
+.meter .nm{font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.meter .nm .fin{font-size:11px;font-weight:700;color:var(--amber);border:1px solid rgba(240,180,41,.5);border-radius:99px;padding:1px 7px}
+.meter .bar{height:6px;background:#0B1220;border-radius:99px;margin-top:6px;overflow:hidden}
+.meter .bar i{display:block;height:100%;border-radius:99px;transition:width .4s}
+.meter .rt{font-size:13px;color:var(--mut);font-weight:600;min-width:44px;text-align:right}
+.meter .rt.pro{color:var(--green)}
+
+/* --- tasks --- */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:7px 12px;border-radius:99px;border:1px solid var(--line2);background:transparent;font-size:13px;font-weight:600;color:var(--mut)}
+.chip.on{background:var(--txt);color:var(--bg);border-color:var(--txt)}
+.search{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--txt);font-size:15px;margin-bottom:10px}
+.grp{margin-bottom:18px}
+.grph{display:flex;align-items:center;gap:8px;padding:6px 2px;font-weight:700}
+.grph .sw{width:8px;height:16px;border-radius:2px}
+.grph .c{margin-left:auto;color:var(--mut);font-weight:600;font-size:13px}
+.item{display:grid;grid-template-columns:24px 1fr;gap:12px;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:6px;cursor:pointer}
+.item .box{width:24px;height:24px;border-radius:6px;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;margin-top:1px}
+.item .box svg{width:14px;height:14px;opacity:0}
+.item.done{border-color:rgba(46,212,127,.35);background:#12201A}
+.item.done .box{background:var(--green);border-color:var(--green)}
+.item.done .box svg{opacity:1}
+.item.done .tt{color:var(--mut);text-decoration:line-through;text-decoration-color:rgba(141,154,179,.6)}
+.item .tt{font-size:14.5px;line-height:1.4}
+.item .meta{display:flex;gap:6px;align-items:center;margin-bottom:5px;font-size:12px;color:var(--mut)}
+.item .win{color:var(--mut);font-size:13px;margin-top:5px}
+.item .win b{color:var(--green);font-weight:600}
+.item a{font-size:12.5px;display:inline-block;margin-top:6px}
+
+/* --- quiz --- */
+.card{background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:22px 18px;min-height:220px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;margin-top:10px}
+.card .q{font-size:19px;font-weight:700;line-height:1.35;letter-spacing:-.01em}
+.card .a{font-size:16px;color:var(--txt);line-height:1.5;margin-top:10px;padding-top:12px;border-top:1px dashed var(--line2)}
+.card .hint{font-size:12.5px;color:var(--dim);margin-top:14px}
+.qrow{display:flex;gap:8px;margin-top:12px}
+.qrow .btn{padding:12px}
+.qrow .again{background:#2A1C24;color:var(--red)} .qrow .got{background:#12261B;color:var(--green)}
+.qstat{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-top:12px}
+
+/* --- takeover --- */
+.tk .grp{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 12px 8px}
+.tk .grph{padding:8px 0}
+.tk .row{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--line);cursor:pointer;font-size:14px}
+.tk .row .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--line2)}
+.tk .row.done .box{background:var(--green);border-color:var(--green)}
+.tk .row.done{color:var(--mut)}
+textarea{width:100%;min-height:110px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit;font-size:13px}
+
+/* --- more --- */
+.kv{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv b{font-weight:700}
+.stack{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.stack .btn{text-align:left}
+.stack .btn.danger{color:var(--red);background:#22161B}
+ul.plain{padding-left:18px;margin:8px 0;color:var(--mut);font-size:13.5px}
+
+/* --- nav --- */
+.nav{position:fixed;left:0;right:0;bottom:0;background:rgba(14,20,31,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  display:flex;justify-content:space-around;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:10}
+.nav button{flex:1;background:transparent;border:0;padding:8px 4px;font-size:11.5px;font-weight:600;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:10px}
+.nav button svg{width:22px;height:22px}
+.nav button.on{color:var(--txt)}
+.nav button.on svg{color:var(--green)}
+
+/* --- toast + confetti --- */
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);
+  padding:10px 16px;border-radius:99px;font-weight:700;font-size:14px;opacity:0;transition:all .25s;z-index:20;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:30}
+#confetti i{position:absolute;width:8px;height:12px;border-radius:2px;top:-20px}
+@keyframes drop{to{transform:translateY(110vh) rotate(720deg);opacity:.2}}
+.empty{padding:28px 10px;text-align:center;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="view on" id="home"></section>
+  <section class="view" id="tasks"></section>
+  <section class="view" id="quiz"></section>
+  <section class="view" id="takeover"></section>
+  <section class="view" id="more"></section>
+</div>
+<nav class="nav">
+  <button data-go="home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 12h.01M11 12h.01M15 12h.01"/></svg>Home</button>
+  <button data-go="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Paths</button>
+  <button data-go="quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M12 9v4M12 16h.01"/></svg>Quiz</button>
+  <button data-go="takeover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg>Takeover</button>
+  <button data-go="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 5l2-2"/></svg>More</button>
+</nav>
+<div class="toast" id="toast"></div>
+<div id="confetti"></div>
+
+<script>
+const DATA = {"tasks": [{"id": 1, "path": "Foundations", "type": "Step", "adv": false, "task": "Learn the UniFi OS console family: Cloud Gateway (UCG-Ultra/Max/Fiber), Dream Machine (UDM-Pro/SE), Cloud Gateway (UCG-Ultra/Max/Fiber), Dream Machine (UDM-Pro/SE)", "win": "Understand which gateway fits which deployment", "xp": 100, "link": "https://help.ubiquiti.com/", "new": false}], "total": 1, "levels": [{"xp": 0, "title": "Novice"}, {"xp": 500, "title": "Initiate"}, {"xp": 1500, "title": "Adept"}, {"xp": 3000, "title": "Expert"}], "paths": [{"name": "Foundations", "short": "Foundations", "color": "#4DA3FF"}], "maxxp": 3000, "version": "1.0", "quiz": [{"q": "What is UniFi?", "a": "A network management platform by Ubiquiti Networks"}], "takeover": [{"group": "Setup", "items": ["Configure Network", "Setup Security"]}]};
+const KEY = "unifi-pro-v2";
+const el = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#062A17" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>';
+
+/* ---------- storage: artifact API if present, else localStorage, else memory ---------- */
+const store = {
+  async get(){ try{
+    if(window.storage){ const r = await window.storage.get(KEY, false); return r ? JSON.parse(r.value) : null; }
+    const v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null;
+  }catch(e){ return null; } },
+  async set(v){ try{
+    if(window.storage){ await window.storage.set(KEY, JSON.stringify(v), false); return; }
+    localStorage.setItem(KEY, JSON.stringify(v));
+  }catch(e){} }
+};
+let S = {done:[], quiz:{}, takeover:{}, site:"", streak:{count:0,last:""}};
+let done = new Set();
+async function load(){ const v = await store.get(); if(v){ S = Object.assign(S, v); } done = new Set(S.done||[]); }
+async function save(){ S.done = [...done]; await store.set(S); }
+
+/* ---------- derived ---------- */
+const byId = Object.fromEntries(DATA.tasks.map(t=>[t.id,t]));
+const total = DATA.total;
+const doneCount = () => done.size;
+const xp = () => [...done].reduce((a,id)=>a+(byId[id]?.xp||0),0);
+function level(){ const x=xp(); let i=0; DATA.levels.forEach((l,k)=>{ if(x>=l.xp) i=k; }); return i; }
+function pathStats(name){ const ts=DATA.tasks.filter(t=>t.path===name); const d=ts.filter(t=>done.has(t.id)).length; return {d,t:ts.length,pct:ts.length?d/ts.length:0}; }
+function proGate(){ // Level 3+ and all core done in every path
+  const core = DATA.tasks.filter(t=>!t.adv); return level()>=3 && core.every(t=>done.has(t.id)); }
+function nextTask(){
+  // goal gradient: prefer the path with the fewest remaining (but >0), then first undone in path order
+  const rem = DATA.paths.map(p=>({p, s:pathStats(p.name)})).filter(x=>x.s.d<x.s.t);
+  if(!rem.length) return null;
+  const started = rem.filter(x=>x.s.d>0);
+  const pick = started.length ? started.sort((a,b)=>(a.s.t-a.s.d)-(b.s.t-b.s.d))[0] : rem[0];
+  return DATA.tasks.find(t=>t.path===pick.p.name && !done.has(t.id));
+}
+function leadPath(){ const rem=DATA.paths.map(p=>({p,s:pathStats(p.name)})).filter(x=>x.s.d<x.s.t&&x.s.d>0); if(!rem.length) return null; return rem.sort((a,b)=>(a.s.t-a.s.d)-(b.s.t-b.s.d))[0].p.name; }
+
+/* ---------- streak ---------- */
+function touchStreak(){
+  const today=new Date().toISOString().slice(0,10);
+  if(S.streak.last===today) return;
+  const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+  S.streak.count = (S.streak.last===y) ? (S.streak.count||0)+1 : 1;
+  S.streak.last=today;
+}
+
+/* ---------- actions ---------- */
+function toast(msg){ const t=el("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1800); }
+async function toggle(id){
+  const before=level();
+  if(done.has(id)) done.delete(id); else { done.add(id); touchStreak(); }
+  await save();
+  const after=level();
+  if(after>before){ confetti(); toast("Level up: "+DATA.levels[after].title); }
+  else if(done.has(id)) { const t=byId[id]; toast("+"+t.xp+" XP"); }
+  const view=document.querySelector(".view.on").id; render(view);
+}
+function confetti(){
+  const host=el("confetti"); const cols=[getComputedStyle(document.documentElement).getPropertyValue('--green'),'#4DA3FF','#F0B429','#B388FF','#FF6B8A'];
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for(let i=0;i<70;i++){ const d=document.createElement('i'); d.style.left=(Math.random()*100)+'vw'; d.style.background=cols[i%cols.length];
+    const dur=1.6+Math.random()*1.4; d.style.animation=`drop ${dur}s cubic-bezier(.3,.6,.4,1) forwards`; d.style.animationDelay=(Math.random()*.3)+'s';
+    host.appendChild(d); setTimeout(()=>d.remove(),(dur+.5)*1000); }
+}
+
+/* ---------- views ---------- */
+function tags(t){ return `<span class="tag ${t.type==='Lab'?'lab':''}">${t.type}</span>${t.adv?'<span class="tag adv">Advanced</span>':''}${t.new?'<span class="tag new">New for 2026</span>':''}}`; }
+
+function renderHome(){
+  const li=level(), lv=DATA.levels[li], nxt=DATA.levels[li+1];
+  const within = nxt ? (xp()-lv.xp)/(nxt.xp-lv.xp) : 1;
+  const p = doneCount()/total;
+  const nt = nextTask();
+  const lead = leadPath();
+  const board = DATA.tasks.map(t=>`<div class="port ${done.has(t.id)?'on':(nt&&nt.id===t.id?'next':'')}" data-id="${t.id}" title="${esc(t.task)}"></div>`).join('');
+  const meters = DATA.paths.map(pp=>{ const s=pathStats(pp.name); const isLead=pp.name===lead;
+    return `<div class="meter ${isLead?'lead':''}" data-path="${esc(pp.name)}">
+      <div class="sw" style="background:${pp.color}"></div>
+      <div><div class="nm">${esc(pp.short)}${isLead?'<span class="fin">Finish next</span>':''}</div>
+        <div class="bar"><i style="width:${Math.round(s.pct*100)}%;background:${pp.color}"></i></div></div>
+      <div class="rt ${s.pct>=1?'pro':''}">${s.pct>=1?'Done':s.d+'/'+s.t}</div></div>`; }).join('');
+  const nextCard = nt ? `<div class="dothis">
+      <div class="k">${tags(nt)}<span>· ${esc(nt.path)}</span></div>
+      <div class="t">${esc(nt.task)}</div>
+      <div class="w">Afterwards: <b>${esc(nt.win)}</b></div>
+      <div class="actions"><button class="btn go" data-done="${nt.id}">Done · +${nt.xp} XP</button>
+        ${nt.link?`<a class="btn ghost" href="${esc(nt.link)}" target="_blank" rel="noopener">Open guide</a>`:''}</div>
+    </div>` : `<div class="dothis"><div class="t">Every port is lit.</div><div class="w">${proGate()?'<b>PRO status reached.</b> Now go run the Takeover on a real site.':'Finish the remaining core tasks.'}</div></div>`;
+  el("home").innerHTML = `
+    <div class="topbar"><h1>UniFi Pro</h1><span class="streak">🔥 ${S.streak.count||0} day${(S.streak.count||0)===1?'':'s'}</span></div>
+    <div class="plate">
+      <div class="head">
+        <div><div class="lvl">${esc(lv.title)}${proGate()?' <span style="color:var(--green)">· PRO</span>':''}</div>
+          <div class="lvlsub">${xp()} XP${nxt?` · ${nxt.xp-xp()} to ${esc(nxt.title)}`:' · top level'}</div></div>
+        <div class="pct">${Math.round(p*100)}<small>%</small></div>
+      </div>
+      <div class="xp"><i style="width:${Math.round(within*100)}%"></i></div>
+      <div class="xpmeta"><span>Level ${li+1} of ${DATA.levels.length}</span><span>${doneCount()} of ${total} ports online</span></div>
+      <div class="board">${board}</div>
+      <div class="boardlbl"><span>Green is done, amber is next</span><span>Tap a port to open it</span></div>
+    </div>
+    ${nextCard}
+    <div class="section"><h2>Finish a path</h2><span class="mut small">${DATA.paths.filter(pp=>pathStats(pp.name).pct>=1).length} of ${DATA.paths.length} complete</span></div>
+    ${meters}`;
+  el("home").querySelectorAll('.port').forEach(pt=>pt.addEventListener('click',()=>openTask(+pt.dataset.id)));
+  el("home").querySelectorAll('.meter').forEach(m=>m.addEventListener('click',()=>openPath(m.dataset.path)));
+  const b=el("home").querySelector('[data-done]'); if(b) b.addEventListener('click',()=>toggle(+b.dataset.done));
+}
+
+let taskFilter = {q:"", mode:"all", path:""};
+function renderTasks(){
+  const q=taskFilter.q.trim().toLowerCase();
+  const modes=[["all","All"],["todo","To do"],["lab","Labs"],["new","New for 2026"],["adv","Advanced"]];
+  let html = `<div class="topbar"><h1>Paths</h1><span class="mut">${doneCount()}/${total}</span></div>
+    <input class="search" id="search" placeholder="Search tasks" value="${esc(taskFilter.q)}">
+    <div class="chips">${modes.map(([k,l])=>`<button class="chip ${taskFilter.mode===k?'on':''}" data-mode="${k}">${l}</button>`).join('')}</div>
+    <div class="chips">${DATA.paths.map(pp=>`<button class="chip ${taskFilter.path===pp.name?'on':''}" data-path="${esc(pp.name)}">${esc(pp.short)}</button>`).join('')}</div>`;
+  let any=false;
+  for(const pp of DATA.paths){
+    if(taskFilter.path && taskFilter.path!==pp.name) continue;
+    const items = DATA.tasks.filter(t=>t.path===pp.name)
+      .filter(t=>!q || (t.task+" "+t.win).toLowerCase().includes(q))
+      .filter(t=>taskFilter.mode==="all" || (taskFilter.mode==="todo"&&!done.has(t.id)) || (taskFilter.mode==="lab"&&t.type==="Lab") || (taskFilter.mode==="new"&&t.new) || (taskFilter.mode==="adv"&&t.adv));
+    if(!items.length) continue; any=true;
+    const s=pathStats(pp.name);
+    html += `<div class="grp" id="grp-${esc(pp.short).replace(/\W/g,'')}"><div class="grph"><span class="sw" style="background:${pp.color}"></span>${esc(pp.name)}<span class="c">${s.d}/${s.t}</span></div>`;
+    for(const t of items){
+      html += `<div class="item ${done.has(t.id)?'done':''}" data-id="${t.id}" id="task-${t.id}">
+        <div class="box">${CHECK}</div>
+        <div><div class="meta">${tags(t)}<span>+${t.xp} XP</span></div>
+          <div class="tt">${esc(t.task)}</div>
+          <div class="win">Afterwards: <b>${esc(t.win)}</b></div>
+          ${t.link?`<a href="${esc(t.link)}" target="_blank" rel="noopener" data-stop>Open guide</a>`:''}</div></div>`;
+    }
+    html += `</div>`;
+  }
+  if(!any) html += `<div class="empty">Nothing matches. Clear a filter to see tasks.</div>`;
+  el("tasks").innerHTML = html;
+  el("search").addEventListener('input', e=>{ taskFilter.q=e.target.value; const pos=e.target.selectionStart; renderTasks(); const s=el("search"); s.focus(); s.setSelectionRange(pos,pos); });
+  el("tasks").querySelectorAll('[data-mode]').forEach(c=>c.addEventListener('click',()=>{ taskFilter.mode=c.dataset.mode; renderTasks(); }));
+  el("tasks").querySelectorAll('[data-path]').forEach(c=>c.addEventListener('click',()=>{ taskFilter.path = taskFilter.path===c.dataset.path ? "" : c.dataset.path; renderTasks(); }));
+  el("tasks").querySelectorAll('.item').forEach(it=>it.addEventListener('click',e=>{ if(e.target.closest('a')) return; toggle(+it.dataset.id); }));
+}
+function openTask(id){ const t=byId[id]; taskFilter={q:"",mode:"all",path:t.path}; go("tasks"); setTimeout(()=>{ el("task-"+id)?.scrollIntoView({block:"center"}); },30); }
+function openPath(name){ taskFilter={q:"",mode:"all",path:name}; go("tasks"); }
+
+/* ---------- quiz: simple leitner, cards you miss come back sooner ---------- */
+let qi=null, qflip=false;
+function quizPick(){
+  const n=DATA.quiz.length; const st=S.quiz;
+  let pool=[...Array(n).keys()].filter(i=>!(st[i]&&st[i].box>=3&&st[i].seen>=3));
+  if(!pool.length) pool=[...Array(n).keys()];
+  pool.sort((a,b)=>((st[a]?.box||0)-(st[b]?.box||0)) || ((st[a]?.seen||0)-(st[b]?.seen||0)) || Math.random()-.5);
+  const top=pool.slice(0,5); return top[Math.floor(Math.random()*top.length)];
+}
+function renderQuiz(){
+  if(qi===null){ qi=quizPick(); qflip=false; }
+  const c=DATA.quiz[qi]; const st=S.quiz; const mastered=Object.values(st).filter(v=>v.box>=3).length;
+  el("quiz").innerHTML = `<div class="topbar"><h1>Quiz</h1><span class="mut">${mastered}/${DATA.quiz.length} mastered</span></div>
+    <div class="card" id="qcard"><div class="q">${esc(c.q)}</div>${qflip?`<div class="a">${esc(c.a)}</div>`:'<div class="hint">Tap to reveal the answer</div>'}</div>
+    ${qflip?`<div class="qrow"><button class="btn again" id="qagain">Again</button><button class="btn got" id="qgot">Got it</button></div>`:''}
+    <div class="qstat"><span>Card ${qi+1} of ${DATA.quiz.length}</span><span>Missed cards come back sooner</span></div>`;
+  el("qcard").addEventListener('click',()=>{ qflip=!qflip; renderQuiz(); });
+  const g=el("qgot"), a=el("qagain");
+  if(g) g.addEventListener('click',async()=>{ const s=st[qi]||{box:0,seen:0}; s.box=Math.min(3,s.box+1); s.seen++; st[qi]=s; touchStreak(); await save(); qi=null; renderQuiz(); });
+  if(a) a.addEventListener('click',async()=>{ const s=st[qi]||{box:0,seen:0}; s.box=0; s.seen++; st[qi]=s; await save(); qi=null; renderQuiz(); });
+}
+
+/* ---------- takeover ---------- */
+function renderTakeover(){
+  const site=S.site||""; const tk=S.takeover[site]||{};
+  const totalItems=DATA.takeover.reduce((a,g)=>a+g.items.length,0); const doneItems=Object.values(tk).filter(Boolean).length;
+  let html=`<div class="topbar"><h1>Service takeover</h1><span class="mut">${doneItems}/${totalItems}</span></div>
+    <input class="search" id="site" placeholder="Site name (each site keeps its own checklist)" value="${esc(site)}">
+    <div class="tk">`;
+  DATA.takeover.forEach((g,gi)=>{
+    html+=`<div class="grp"><div class="grph">${esc(g.group)}<span class="c">${g.items.filter((_,ii)=>tk[gi+'-'+ii]).length}/${g.items.length}</span></div>`;
+    g.items.forEach((it,ii)=>{ const k=gi+'-'+ii; html+=`<div class="row ${tk[k]?'done':''}" data-k="${k}"><div class="box"></div><div>${esc(it)}</div></div>`; });
+    html+=`</div><div style="height:10px"></div>`;
+  });
+  html+=`</div><div class="stack"><button class="btn" id="tkcopy">Copy report for this site</button><button class="btn ghost" id="tkreset">Clear this site's checklist</button></div>`;
+  el("takeover").innerHTML=html;
+  el("site").addEventListener('change',async e=>{ S.site=e.target.value.trim(); await save(); renderTakeover(); });
+  el("takeover").querySelectorAll('.row').forEach(r=>r.addEventListener('click',async()=>{ const s=S.site||""; S.takeover[s]=S.takeover[s]||{}; S.takeover[s][r.dataset.k]=!S.takeover[s][r.dataset.k]; await save(); renderTakeover(); }));
+  el("tkcopy").addEventListener('click',()=>{ const lines=[`Service takeover — ${S.site||'unnamed site'} — ${new Date().toLocaleDateString()}`];
+    DATA.takeover.forEach((g,gi)=>{ lines.push(""); lines.push(g.group); g.items.forEach((it,ii)=>lines.push((tk[gi+'-'+ii]?'[x] ':'[ ] ')+it)); });
+    const txt=lines.join("\n"); (navigator.clipboard?.writeText(txt)||Promise.reject()).then(()=>toast("Report copied")).catch(()=>{ prompt("Copy this report:",txt); }); });
+  el("tkreset").addEventListener('click',async()=>{ if(confirm("Clear the checklist for this site?")){ delete S.takeover[S.site||""]; await save(); renderTakeover(); } });
+}
+
+/* ---------- more ---------- */
+function renderMore(){
+  const newTasks=DATA.tasks.filter(t=>t.new);
+  el("more").innerHTML=`<div class="topbar"><h1>More</h1><span class="mut small">Path v${esc(DATA.version)}</span></div>
+    <div class="kv"><span>Tasks done</span><b>${doneCount()} / ${total}</b></div>
+    <div class="kv"><span>XP</span><b>${xp()} / ${DATA.maxxp}</b></div>
+    <div class="kv"><span>Labs done</span><b>${DATA.tasks.filter(t=>t.type==='Lab'&&done.has(t.id)).length} / ${DATA.tasks.filter(t=>t.type==='Lab').length}</b></div>
+    <div class="kv"><span>Quiz cards mastered</span><b>${Object.values(S.quiz).filter(v=>v.box>=3).length} / ${DATA.quiz.length}</b></div>
+    <div class="kv"><span>PRO gate</span><b>${proGate()?'Unlocked':'Level 4 + every core task'}</b></div>
+    <div class="section"><h2>What changed in the September 2026 refresh</h2></div>
+    <ul class="plain">
+      <li>UniFi Network 10.6 features and more</li>
+      <li>UniFi OS 5.2 updates</li>
+      <li>Protect 7.2 and Security improvements</li>
+    </ul>
+    <div class="mut small">${newTasks.length} tasks are tagged "New for 2026".</div>
+    <div class="stack">
+      <button class="btn" id="exp">Export progress (JSON)</button>
+      <button class="btn" id="imp">Import progress</button>
+      <button class="btn danger" id="reset">Reset everything</button>
+    </div>
+    <p class="mut small" style="margin-top:18px">Progress is saved on this device in this browser.</p>`;
+  el("exp").addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(S)],{type:"application/json"}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="unifi-pro-export.json"; a.click(); });
+  el("imp").addEventListener('click',()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange=async()=>{ try{ const t=await inp.files[0].text(); const v=JSON.parse(t); S=Object.assign(S,v); done=new Set(S.done||[]); await save(); renderMore(); toast("Progress imported"); }catch(e){ alert("Import failed: "+e.message); } }; inp.click(); });
+  el("reset").addEventListener('click',async()=>{ if(confirm("Reset all progress, quiz history and checklists?")){ S={done:[],quiz:{},takeover:{},site:"",streak:{count:0,last:""}}; done=new Set(); await save(); renderMore(); toast("Everything reset"); } });
+}
+
+/* ---------- nav ---------- */
+function render(name){ ({home:renderHome,tasks:renderTasks,quiz:renderQuiz,takeover:renderTakeover,more:renderMore})[name](); }
+function go(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===name));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===name));
+  render(name); window.scrollTo({top:0});
+}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+(async()=>{ await load(); renderHome(); })();
+</script>
+</body>
+</html>
